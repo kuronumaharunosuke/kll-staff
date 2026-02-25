@@ -1,0 +1,792 @@
+    <!DOCTYPE html>
+    <html lang="ja">
+    <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KLL シフト管理</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;500;700&family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+    :root{
+    --paper:#f5f0e8;--paper2:#ede7d9;--paper3:#e4ddd0;
+    --ink:#1c1712;--ink2:#3d3730;--ink3:#6b6259;--ink4:#9e9188;
+    --accent:#b84a1e;--green:#2d6b4a;--blue:#1e4d7a;--gold:#9a6b1e;
+    --rule:#c8bfb0;--shadow:rgba(28,23,18,.08);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html{background:var(--paper3)}
+    body{background:var(--paper);color:var(--ink);font-family:'Noto Sans JP',sans-serif;min-height:100vh}
+    button{cursor:pointer;font-family:'Noto Sans JP',sans-serif}
+    input,select{font-family:'Noto Sans JP',sans-serif}
+    ::-webkit-scrollbar{width:4px;height:4px}
+    ::-webkit-scrollbar-track{background:var(--paper2)}
+    ::-webkit-scrollbar-thumb{background:var(--rule);border-radius:2px}
+    .wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+    .hdr{border-bottom:2px solid var(--ink);background:var(--paper);position:sticky;top:0;z-index:200}
+    .hdr-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:12px;flex-wrap:wrap}
+    .hdr-logo-main{font-family:'Noto Serif JP',serif;font-size:19px;font-weight:700;letter-spacing:0.04em}
+    .hdr-logo-sub{font-size:9px;color:var(--ink3);letter-spacing:0.15em;text-transform:uppercase;margin-top:1px}
+    .hdr-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+    .hdr-badge{font-family:'DM Mono',monospace;font-size:11px;padding:4px 10px;border:1.5px solid var(--rule);border-radius:2px;background:var(--paper2);color:var(--ink2)}
+    .mode-pill{display:flex;border:1.5px solid var(--rule);border-radius:2px;overflow:hidden}
+    .mode-btn{padding:5px 12px;border:none;font-size:11px;font-weight:700;letter-spacing:0.05em;cursor:pointer;transition:all .15s}
+    .mode-btn.active{background:var(--ink);color:var(--paper)}
+    .mode-btn:not(.active){background:transparent;color:var(--ink4)}
+    .mode-btn:not(.active):hover{color:var(--ink)}
+    .tabs{border-bottom:1.5px solid var(--rule);overflow-x:auto;white-space:nowrap;background:var(--paper);position:sticky;top:57px;z-index:199}
+    .tab-btn{display:inline-block;padding:11px 16px;background:none;border:none;font-size:11px;font-weight:500;letter-spacing:0.05em;color:var(--ink4);cursor:pointer;border-bottom:2.5px solid transparent;margin-bottom:-1.5px;transition:color .15s}
+    .tab-btn:hover{color:var(--ink2)}
+    .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:700}
+    .main{padding:28px 0 60px}
+    .pg-title{font-family:'Noto Serif JP',serif;font-size:24px;font-weight:700;margin-bottom:3px;letter-spacing:0.02em}
+    .pg-sub{font-size:10px;color:var(--ink4);margin-bottom:24px;letter-spacing:0.15em;text-transform:uppercase}
+    .card{background:var(--paper);border:1.5px solid var(--rule);border-radius:3px;padding:18px;box-shadow:2px 3px 10px var(--shadow);margin-bottom:14px}
+    .card-title{font-family:'Noto Serif JP',serif;font-size:13px;font-weight:700;margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--rule)}
+    .inp{background:var(--paper2);border:1.5px solid var(--rule);border-radius:2px;padding:6px 10px;font-size:13px;color:var(--ink);outline:none;width:100%;transition:border-color .15s}
+    .inp:focus{border-color:var(--ink3)}
+    .sel{background:var(--paper2);border:1.5px solid var(--rule);border-radius:2px;padding:6px 10px;font-size:13px;color:var(--ink);outline:none;cursor:pointer}
+    .lbl{display:block;font-size:11px;color:var(--ink4);margin-bottom:3px;letter-spacing:0.05em;font-weight:500}
+    .btn{padding:7px 14px;border-radius:2px;border:none;font-size:12px;font-weight:700;letter-spacing:0.05em;transition:opacity .15s;display:inline-flex;align-items:center;gap:5px;cursor:pointer}
+    .btn:hover{opacity:.82}
+    .btn-ink{background:var(--ink);color:var(--paper)}
+    .btn-accent{background:var(--accent);color:#fff}
+    .btn-outline{background:transparent;border:1.5px solid var(--rule);color:var(--ink3)}
+    .btn-outline:hover{border-color:var(--ink3);color:var(--ink)}
+    .btn-sm{padding:4px 10px;font-size:11px}
+    .sticker{display:inline-flex;align-items:center;padding:2px 8px;border-radius:2px;font-size:11px;font-weight:700;letter-spacing:0.03em}
+    .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1.5px;background:var(--rule);border:1.5px solid var(--rule);border-radius:3px;overflow:hidden;margin-bottom:18px}
+    .stat-cell{background:var(--paper);padding:14px 16px}
+    .stat-label{font-size:9px;color:var(--ink4);letter-spacing:0.12em;text-transform:uppercase;margin-bottom:5px}
+    .stat-val{font-family:'DM Mono',monospace;font-size:26px;font-weight:500}
+    .stat-unit{font-family:'Noto Sans JP',sans-serif;font-size:11px;color:var(--ink4);margin-left:2px}
+    .budget-track{height:7px;background:var(--paper3);border:1px solid var(--rule);border-radius:1px;overflow:hidden;margin:7px 0}
+    .budget-fill{height:100%;transition:width .4s ease}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1.5px;background:var(--rule);border:1.5px solid var(--rule);border-radius:3px;overflow:hidden}
+    .cal-head{background:var(--paper3);padding:5px;text-align:center;font-size:10px;font-weight:700;letter-spacing:0.06em;color:var(--ink3)}
+    .cal-head.we{color:var(--accent)}
+    .cal-day{background:var(--paper);padding:5px;min-height:82px;position:relative}
+    .cal-day.we{background:#fdf8f5}
+    .cal-day.empty{background:var(--paper2)}
+    .cal-date{font-family:'DM Mono',monospace;font-size:11px;text-align:right;margin-bottom:3px;color:var(--ink4)}
+    .cal-day.we .cal-date{color:var(--accent)}
+    .shift-chip{display:block;padding:2px 5px;margin-bottom:2px;border-radius:1px;font-size:9px;line-height:1.5;border-left:2.5px solid;cursor:default}
+    .shift-chip.dragging{opacity:.5}
+    .shift-chip.editable{cursor:grab}
+    .shift-chip.editable:hover{filter:brightness(.95)}
+    .staff-progress{margin-bottom:7px}
+    .staff-track{height:4px;background:var(--paper3);border-radius:1px;margin-top:3px;overflow:hidden}
+    .staff-fill{height:100%;border-radius:1px;transition:width .4s}
+    .warning-box{background:#fdf8ed;border:1.5px solid var(--gold);border-radius:2px;padding:10px 14px;margin-bottom:16px;font-size:12px}
+    .req-table{width:100%;border-collapse:collapse;font-size:12px}
+    .req-table th{padding:5px 8px;font-size:10px;font-weight:700;letter-spacing:0.08em;color:var(--ink4);text-align:left;border-bottom:1.5px solid var(--rule)}
+    .req-table td{padding:6px 8px;border-bottom:1px solid var(--rule)}
+    .req-num{width:54px;text-align:center;background:var(--paper2);border:1px solid var(--rule);border-radius:2px;padding:4px;font-family:'DM Mono',monospace;color:var(--ink);font-size:12px}
+    .pref-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1.5px;background:var(--rule);border:1.5px solid var(--rule);border-radius:3px;overflow:hidden}
+    .pref-day{background:var(--paper);padding:4px;min-height:92px}
+    .pref-day.we{background:#fdf8f5}
+    .slot-btn{display:block;width:100%;margin-bottom:2px;padding:2px 3px;border-radius:1px;font-size:9px;font-weight:500;text-align:center;border:1px solid;transition:all .1s;cursor:pointer}
+    .month-nav{display:flex;align-items:center;gap:8px}
+    .mnav-btn{background:none;border:1.5px solid var(--rule);color:var(--ink3);width:26px;height:26px;border-radius:2px;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+    .mnav-btn:hover{border-color:var(--ink3);color:var(--ink)}
+    .mnav-label{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink2);min-width:68px;text-align:center}
+    .day-row{border-bottom:1px solid var(--rule);padding:9px 14px;display:flex;gap:10px;align-items:flex-start}
+    .day-row-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);min-width:56px;padding-top:3px;flex-shrink:0}
+    .day-row-chips{display:flex;flex-wrap:wrap;gap:4px;flex:1}
+    .store-pill{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:700;border:1.5px solid;cursor:pointer;transition:all .15s}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+    .animate-in{animation:fadeUp .2s ease forwards}
+
+    /* Login modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(28,23,18,.45);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px}
+    .modal{background:var(--paper);border:2px solid var(--ink);border-radius:3px;padding:32px;max-width:420px;width:100%;box-shadow:4px 6px 24px rgba(28,23,18,.2)}
+    .modal-title{font-family:'Noto Serif JP',serif;font-size:22px;font-weight:700;margin-bottom:4px}
+    .modal-sub{font-size:11px;color:var(--ink4);margin-bottom:24px;letter-spacing:0.1em;text-transform:uppercase}
+
+    /* Adjust mode overlay */
+    .adjust-badge{background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:2px;letter-spacing:0.06em}
+
+    /* Drag drop */
+    .drop-target{outline:2px dashed var(--accent);outline-offset:2px;background:rgba(184,74,30,.04)}
+
+    /* Staff chips in adjust */
+    .staff-chip-btn{padding:3px 10px;border-radius:1px;font-size:11px;font-weight:600;border:1.5px solid var(--rule);background:var(--paper2);color:var(--ink2);cursor:pointer;transition:all .15s;white-space:nowrap}
+    .staff-chip-btn:hover{border-color:var(--ink3);background:var(--paper)}
+    .staff-chip-btn.selected{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+
+    /* Slot badge */
+    .slot-select{background:var(--paper2);border:1px solid var(--rule);border-radius:2px;padding:4px 6px;font-size:11px;color:var(--ink);outline:none;cursor:pointer}
+
+    @media(max-width:640px){.stat-grid{grid-template-columns:1fr 1fr}}
+    </style>
+    </head>
+    <body>
+    <div id="root"></div>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+    const {useState,useCallback,useMemo,useRef}=React;
+
+    /* ── CONSTANTS ── */
+    const SLOTS=[
+    {id:'a',label:'A',time:'10:00–14:00',hours:4,color:'#9a6b1e',bg:'#f5f0e0',border:'#c49a3c'},
+    {id:'b',label:'B',time:'11:00–19:00',hours:8,color:'#1e4d7a',bg:'#e8eef5',border:'#4a82b8'},
+    {id:'c',label:'C',time:'14:00–22:00',hours:8,color:'#2d6b4a',bg:'#e8f2ec',border:'#4a9a6e'},
+    {id:'d',label:'D',time:'19:00–22:00',hours:3,color:'#5a2d7a',bg:'#f0ebf7',border:'#8a5aaa'},
+    ];
+    const DAYS=['日','月','火','水','木','金','土'];
+    const SC=['#b84a1e','#1e4d7a','#2d6b4a','#9a6b1e','#5a2d7a'];
+
+    const INIT_STORES=[
+    {id:'s1',name:'長谷 SPL',area:'長谷',color:SC[0],managerId:null},
+    {id:'s2',name:'長谷 TGH',area:'長谷',color:SC[1],managerId:null},
+    {id:'s3',name:'鎌倉 BCH',area:'鎌倉',color:SC[2],managerId:null},
+    {id:'s4',name:'鎌倉 VS', area:'鎌倉',color:SC[3],managerId:'st3'},
+    {id:'s5',name:'鎌倉 OJ', area:'鎌倉',color:SC[4],managerId:null},
+    ];
+    const INIT_STAFF=[
+    {id:'st1',name:'Harunosuke',payType:'hourly',rate:1225,desired:15,stores:['s1','s2','s3','s4','s5']},
+    {id:'st2',name:'Kanta',      payType:'hourly',rate:1225,desired:20,stores:['s1','s2','s3','s4','s5']},
+    {id:'st3',name:'Yui',        payType:'monthly',monthlyHours:140,monthSalary:0,desired:20,stores:['s3','s4','s5']},
+    {id:'st4',name:'Ryohei',     payType:'hourly',rate:1225,desired:12,stores:['s1','s2','s3']},
+    {id:'st5',name:'Anto',       payType:'hourly',rate:1225,desired:20,stores:['s3','s4','s5']},
+    ];
+
+    /* ── UTILS ── */
+    function ld(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch{return d}}
+    function sv(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}
+    function useLS(k,d){const[v,setV]=useState(()=>ld(k,d));const set=useCallback(nv=>{setV(nv);sv(k,nv)},[k]);return[v,set];}
+    const fmt=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+    /* calc cost for one shift entry */
+    function shiftCost(staffEntry, slotId){
+    const slot=SLOTS.find(s=>s.id===slotId);
+    if(!slot)return 0;
+    if(staffEntry.payType==='monthly') return 0; // monthly shown separately
+    return (staffEntry.rate||1225)*slot.hours;
+    }
+
+    /* ── LOGIN MODAL ── */
+    function LoginModal({staff,stores,onLogin}){
+    const[mode,setMode]=useState('admin'); // 'admin' | 'manager'
+    const[sel,setSel]=useState('');
+    const managers=staff.filter(s=>stores.some(st=>st.managerId===s.id));
+    return(
+        <div className="modal-overlay">
+        <div className="modal">
+            <div className="modal-title">KLL シフト管理</div>
+            <div className="modal-sub">Guesthouse Shift Board</div>
+            <div className="mode-pill" style={{marginBottom:20,display:'inline-flex'}}>
+            <button className={`mode-btn${mode==='admin'?' active':''}`} onClick={()=>setMode('admin')}>管理者</button>
+            <button className={`mode-btn${mode==='manager'?' active':''}`} onClick={()=>setMode('manager')}>マネージャー</button>
+            </div>
+            {mode==='admin'?(
+            <div>
+                <p style={{fontSize:13,color:'var(--ink3)',marginBottom:18}}>全店舗・全スタッフの管理が可能です。</p>
+                <button className="btn btn-ink" style={{width:'100%',justifyContent:'center',padding:'10px'}} onClick={()=>onLogin({role:'admin'})}>管理者としてログイン</button>
+            </div>
+            ):(
+            <div>
+                <p style={{fontSize:13,color:'var(--ink3)',marginBottom:14}}>担当店舗のシフト確認・微調整が可能です。</p>
+                <div style={{marginBottom:16}}>
+                <label className="lbl">マネージャーを選択</label>
+                <select className="sel inp" value={sel} onChange={e=>setSel(e.target.value)}>
+                    <option value="">選択してください</option>
+                    {managers.map(m=>{
+                    const store=stores.find(st=>st.managerId===m.id);
+                    return <option key={m.id} value={m.id}>{m.name}（{store?.name}担当）</option>;
+                    })}
+                    {managers.length===0&&<option value="" disabled>マネージャー未設定</option>}
+                </select>
+                </div>
+                <button className="btn btn-ink" style={{width:'100%',justifyContent:'center',padding:'10px'}} disabled={!sel}
+                onClick={()=>{const m=staff.find(s=>s.id===sel);const store=stores.find(st=>st.managerId===sel);onLogin({role:'manager',staffId:sel,storeId:store?.id,name:m?.name});}}>
+                ログイン
+                </button>
+            </div>
+            )}
+        </div>
+        </div>
+    );
+    }
+
+    /* ── DASHBOARD ── */
+    function Dashboard({stores,staff,shifts,budget,totalCost,viewYear,viewMonth,generateShifts,setTab,daysInMonth,auth}){
+    const sd={};staff.forEach(s=>sd[s.id]=0);
+    Object.entries(shifts).forEach(([dk,ds])=>{const[y,m]=dk.split('-').map(Number);if(y===viewYear&&m===viewMonth)ds.forEach(s=>sd[s.staff_id]=(sd[s.staff_id]||0)+1);});
+    const covered=daysInMonth.filter(d=>shifts[fmt(d)]?.length>0).length;
+    const pct=Math.min(100,Math.round(totalCost/budget.monthly*100));
+    const remain=budget.monthly-totalCost;
+    const total=Object.entries(shifts).filter(([k])=>{const[y,m]=k.split('-').map(Number);return y===viewYear&&m===viewMonth}).reduce((a,[,v])=>a+v.length,0);
+
+    const visStaff=auth.role==='manager'?staff.filter(s=>s.stores.includes(auth.storeId)):staff;
+
+    return(
+        <div className="animate-in">
+        <div className="pg-title">{viewYear}年{viewMonth}月 — シフト概要</div>
+        <div className="pg-sub">Shift Overview</div>
+        <div className="stat-grid">
+            {[{l:'総シフト数',v:total,u:'件'},{l:'稼働日数',v:covered,u:`/${daysInMonth.length}日`},{l:'スタッフ',v:visStaff.length,u:'名'},{l:'店舗数',v:auth.role==='manager'?1:stores.length,u:'店'}].map(s=>(
+            <div className="stat-cell" key={s.l}><div className="stat-label">{s.l}</div><div className="stat-val">{s.v}<span className="stat-unit">{s.u}</span></div></div>
+            ))}
+        </div>
+        {auth.role==='admin'&&(
+            <div className="card">
+            <div className="card-title">予算状況</div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'var(--ink3)',marginBottom:4}}>
+                <span>使用 <span style={{fontFamily:'DM Mono',color:'var(--ink)',fontSize:14}}>¥{totalCost.toLocaleString()}</span></span>
+                <span>予算 <span style={{fontFamily:'DM Mono',color:'var(--ink)',fontSize:14}}>¥{budget.monthly.toLocaleString()}</span></span>
+            </div>
+            <div className="budget-track"><div className="budget-fill" style={{width:`${pct}%`,background:pct>90?'var(--accent)':pct>70?'var(--gold)':'var(--green)'}}/></div>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:'var(--ink4)'}}>
+                <span>{pct}% 使用</span>
+                <span style={{color:remain<0?'var(--accent)':'var(--green)',fontWeight:700}}>{remain<0?`¥${Math.abs(remain).toLocaleString()} 超過`:`残り ¥${remain.toLocaleString()}`}</span>
+            </div>
+            </div>
+        )}
+        <div className="card">
+            <div className="card-title">スタッフ別出勤状況</div>
+            {visStaff.map(s=>{const c=sd[s.id]||0;const p=Math.min(100,Math.round(c/s.desired*100));return(
+            <div className="staff-progress" key={s.id}>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:12}}>
+                <span style={{fontWeight:500}}>{s.name}{s.payType==='monthly'&&<span style={{fontSize:10,color:'var(--gold)',marginLeft:5,fontWeight:700}}>月給</span>}</span>
+                <span style={{fontFamily:'DM Mono',fontSize:11,color:'var(--ink4)'}}>{c}/{s.desired}日</span>
+                </div>
+                <div className="staff-track"><div className="staff-fill" style={{width:`${p}%`,background:p>=100?'var(--green)':'var(--blue)'}}/></div>
+            </div>
+            );})}
+        </div>
+        <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {auth.role==='admin'&&<button className="btn btn-ink" onClick={generateShifts}>シフト自動生成</button>}
+            {auth.role==='admin'&&<button className="btn btn-outline" onClick={()=>setTab('preferences')}>希望入力</button>}
+            <button className="btn btn-outline" onClick={()=>setTab('schedule')}>シフト表{auth.role==='manager'&&'を確認・調整'}</button>
+            {auth.role==='admin'&&<button className="btn btn-outline" onClick={()=>setTab('budget')}>予算管理</button>}
+        </div>
+        </div>
+    );
+    }
+
+    /* ── STORE SETTINGS (admin only) ── */
+    function StoreSettings({stores,setStores,requirements,setRequirements,staff}){
+    const[form,setForm]=useState({name:'',area:'',color:SC[0],managerId:''});
+    const rk=(sid,type,slotId)=>`${sid}_${type}_${slotId}`;
+    const setR=(sid,type,slotId,v)=>setRequirements({...requirements,[rk(sid,type,slotId)]:parseInt(v)||0});
+    return(
+        <div className="animate-in">
+        <div className="pg-title">店舗 · 必要人数設定</div>
+        <div className="pg-sub">Store & Requirements</div>
+        <div className="card">
+            <div className="card-title">店舗を追加</div>
+            <div style={{display:'grid',gridTemplateColumns:'2fr 1fr 1fr auto auto',gap:8,alignItems:'flex-end'}}>
+            <div><label className="lbl">店舗名</label><input className="inp" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="例: 長谷 SPL"/></div>
+            <div><label className="lbl">エリア</label><input className="inp" value={form.area} onChange={e=>setForm({...form,area:e.target.value})} placeholder="長谷"/></div>
+            <div><label className="lbl">マネージャー</label>
+                <select className="sel inp" value={form.managerId} onChange={e=>setForm({...form,managerId:e.target.value})}>
+                <option value="">なし</option>
+                {staff.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+            </div>
+            <div><label className="lbl">色</label><div style={{display:'flex',gap:4,marginTop:4}}>{SC.map(c=><button key={c} onClick={()=>setForm({...form,color:c})} style={{width:20,height:20,borderRadius:'50%',background:c,border:form.color===c?'2.5px solid var(--ink)':'2px solid transparent',cursor:'pointer'}}/>)}</div></div>
+            <button className="btn btn-ink" onClick={()=>{if(!form.name)return;setStores([...stores,{...form,id:'s'+Date.now()}]);setForm({name:'',area:'',color:SC[0],managerId:''});}}>追加</button>
+            </div>
+        </div>
+        {stores.map(store=>{
+            const mgr=staff.find(s=>s.id===store.managerId);
+            return(
+            <div className="card" key={store.id}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
+                <div style={{display:'flex',alignItems:'center',gap:8}}>
+                    <div style={{width:8,height:22,background:store.color,borderRadius:1}}/>
+                    <span style={{fontWeight:700,fontSize:14,fontFamily:'Noto Serif JP,serif'}}>{store.name}</span>
+                    <span style={{fontSize:10,color:'var(--ink4)',border:'1px solid var(--rule)',padding:'1px 6px',borderRadius:1}}>{store.area}</span>
+                    {mgr&&<span style={{fontSize:10,color:'var(--accent)',border:'1px solid var(--accent)',padding:'1px 6px',borderRadius:1,fontWeight:700}}>MGR: {mgr.name}</span>}
+                </div>
+                <div style={{display:'flex',gap:8,alignItems:'center'}}>
+                    <select className="sel" style={{fontSize:11,padding:'3px 6px'}} value={store.managerId||''} onChange={e=>setStores(stores.map(s=>s.id===store.id?{...s,managerId:e.target.value||null}:s))}>
+                    <option value="">マネージャーなし</option>
+                    {staff.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                    <button onClick={()=>setStores(stores.filter(s=>s.id!==store.id))} style={{background:'none',border:'none',color:'var(--ink4)',fontSize:15}}>×</button>
+                </div>
+                </div>
+                <div style={{overflowX:'auto'}}>
+                <table className="req-table">
+                    <thead><tr><th>シフト</th><th>時間帯</th><th style={{textAlign:'center'}}>平日</th><th style={{textAlign:'center'}}>土日</th></tr></thead>
+                    <tbody>
+                    {SLOTS.map(slot=>(
+                        <tr key={slot.id}>
+                        <td><span className="sticker" style={{background:slot.bg,color:slot.color,border:`1px solid ${slot.border}`}}>{slot.label}</span></td>
+                        <td style={{fontFamily:'DM Mono',fontSize:11,color:'var(--ink3)'}}>{slot.time}</td>
+                        {['weekday','weekend'].map(type=>(
+                            <td key={type} style={{textAlign:'center'}}>
+                            <input type="number" min="0" max="10" className="req-num" value={requirements[rk(store.id,type,slot.id)]||0} onChange={e=>setR(store.id,type,slot.id,e.target.value)}/>
+                            <span style={{fontSize:10,color:'var(--ink4)',marginLeft:3}}>名</span>
+                            </td>
+                        ))}
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+            );
+        })}
+        </div>
+    );
+    }
+
+    /* ── STAFF MANAGEMENT (admin only) ── */
+    function StaffManagement({staff,setStaff,stores}){
+    const[form,setForm]=useState({name:'',payType:'hourly',rate:1225,monthlyHours:140,monthSalary:0,desired:15,stores:[]});
+    const[editing,setEditing]=useState(null);
+    const openEdit=s=>{setEditing(s.id);setForm({name:s.name,payType:s.payType||'hourly',rate:s.rate||1225,monthlyHours:s.monthlyHours||140,monthSalary:s.monthSalary||0,desired:s.desired,stores:[...s.stores]});};
+    const save=()=>{
+        if(!form.name)return;
+        if(editing){setStaff(staff.map(s=>s.id===editing?{...s,...form}:s));setEditing(null);}
+        else setStaff([...staff,{...form,id:'st'+Date.now()}]);
+        setForm({name:'',payType:'hourly',rate:1225,monthlyHours:140,monthSalary:0,desired:15,stores:[]});
+    };
+    const tog=sid=>setForm({...form,stores:form.stores.includes(sid)?form.stores.filter(x=>x!==sid):[...form.stores,sid]});
+    return(
+        <div className="animate-in">
+        <div className="pg-title">スタッフ管理</div>
+        <div className="pg-sub">Staff Management</div>
+        <div className="card">
+            <div className="card-title">{editing?'スタッフを編集':'スタッフを追加'}</div>
+            <div style={{display:'grid',gridTemplateColumns:'2fr 1fr 1fr',gap:10,marginBottom:10}}>
+            <div><label className="lbl">氏名</label><input className="inp" value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="スタッフ名"/></div>
+            <div><label className="lbl">給与タイプ</label>
+                <select className="sel inp" value={form.payType} onChange={e=>setForm({...form,payType:e.target.value})}>
+                <option value="hourly">時給</option>
+                <option value="monthly">月給</option>
+                </select>
+            </div>
+            <div><label className="lbl">希望出勤日数 / 月</label><input type="number" className="inp" value={form.desired} onChange={e=>setForm({...form,desired:parseInt(e.target.value)||0})}/></div>
+            </div>
+            {form.payType==='hourly'?(
+            <div style={{marginBottom:10,maxWidth:200}}>
+                <label className="lbl">時給 (¥)</label>
+                <input type="number" className="inp" value={form.rate} onChange={e=>setForm({...form,rate:parseInt(e.target.value)||0})}/>
+            </div>
+            ):(
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10,maxWidth:400}}>
+                <div><label className="lbl">月間労働時間</label><input type="number" className="inp" value={form.monthlyHours} onChange={e=>setForm({...form,monthlyHours:parseInt(e.target.value)||0})}/></div>
+                <div><label className="lbl">月給 (¥) ※任意</label><input type="number" className="inp" value={form.monthSalary} onChange={e=>setForm({...form,monthSalary:parseInt(e.target.value)||0})}/></div>
+            </div>
+            )}
+            <div style={{marginBottom:12}}>
+            <label className="lbl">勤務可能店舗</label>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap',marginTop:4}}>
+                {stores.map(s=>{const on=form.stores.includes(s.id);return(
+                <button key={s.id} className="store-pill" onClick={()=>tog(s.id)} style={{borderColor:on?s.color:'var(--rule)',background:on?s.color+'18':'transparent',color:on?s.color:'var(--ink4)'}}>{s.name}</button>
+                );})}
+            </div>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+            <button className="btn btn-ink" onClick={save}>{editing?'保存':'追加'}</button>
+            {editing&&<button className="btn btn-outline" onClick={()=>{setEditing(null);setForm({name:'',payType:'hourly',rate:1225,monthlyHours:140,monthSalary:0,desired:15,stores:[]});}}>キャンセル</button>}
+            </div>
+        </div>
+        <div style={{border:'1.5px solid var(--rule)',borderRadius:3,overflow:'hidden'}}>
+            {staff.map((s,i)=>{
+            const payLabel=s.payType==='monthly'?`月給 / ${s.monthlyHours}h/月`:`¥${(s.rate||1225).toLocaleString()}/h`;
+            const isMgr=stores.some(st=>st.managerId===s.id);
+            return(
+                <div key={s.id} style={{padding:'12px 16px',background:'var(--paper)',borderBottom:i<staff.length-1?'1px solid var(--rule)':'none',display:'flex',gap:12,alignItems:'center',flexWrap:'wrap'}}>
+                <div style={{width:34,height:34,background:'var(--paper3)',border:'1.5px solid var(--rule)',borderRadius:2,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Noto Serif JP,serif',fontWeight:700,fontSize:14,color:'var(--ink2)',flexShrink:0}}>{s.name[0]}</div>
+                <div style={{flex:'1 1 160px'}}>
+                    <div style={{fontWeight:700,fontSize:13,display:'flex',alignItems:'center',gap:6}}>
+                    {s.name}
+                    {isMgr&&<span style={{fontSize:9,background:'var(--accent)',color:'#fff',padding:'1px 6px',borderRadius:1,fontWeight:700}}>MGR</span>}
+                    {s.payType==='monthly'&&<span style={{fontSize:9,background:'var(--gold)',color:'#fff',padding:'1px 6px',borderRadius:1,fontWeight:700}}>月給</span>}
+                    </div>
+                    <div style={{fontSize:10,color:'var(--ink4)',marginTop:2,fontFamily:'DM Mono'}}>{payLabel} · {s.desired}日/月</div>
+                </div>
+                <div style={{flex:'1 1 180px',display:'flex',gap:4,flexWrap:'wrap'}}>
+                    {stores.map(st=><span key={st.id} style={{fontSize:10,padding:'2px 6px',borderRadius:1,border:`1px solid ${s.stores.includes(st.id)?st.color+'60':'var(--rule)'}`,background:s.stores.includes(st.id)?st.color+'14':'transparent',color:s.stores.includes(st.id)?st.color:'var(--ink4)',fontWeight:s.stores.includes(st.id)?700:400}}>{st.name}</span>)}
+                </div>
+                <div style={{display:'flex',gap:6,flexShrink:0}}>
+                    <button className="btn btn-outline btn-sm" onClick={()=>openEdit(s)}>編集</button>
+                    <button onClick={()=>setStaff(staff.filter(x=>x.id!==s.id))} style={{background:'none',border:'none',color:'var(--ink4)',fontSize:15}}>×</button>
+                </div>
+                </div>
+            );
+            })}
+        </div>
+        </div>
+    );
+    }
+
+    /* ── PREFERENCES ── */
+    function PreferenceInput({staff,preferences,setPreferences,daysInMonth,viewYear,viewMonth,setViewYear,setViewMonth}){
+    const[active,setActive]=useState(staff[0]?.id||null);
+    const tog=(dk,sid)=>{const cur=preferences[dk]?.[active]||[];const nx=cur.includes(sid)?cur.filter(x=>x!==sid):[...cur,sid];setPreferences({...preferences,[dk]:{...(preferences[dk]||{}),[active]:nx}});};
+    const isOn=(dk,sid)=>(preferences[dk]?.[active]||[]).includes(sid);
+    const totalDays=daysInMonth.filter(d=>(preferences[fmt(d)]?.[active]||[]).length>0).length;
+    const desired=staff.find(s=>s.id===active)?.desired||0;
+    return(
+        <div className="animate-in">
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:3,flexWrap:'wrap',gap:10}}>
+            <div><div className="pg-title">希望シフト入力</div><div className="pg-sub">Shift Preferences</div></div>
+            <div className="month-nav">
+            <button className="mnav-btn" onClick={()=>{if(viewMonth===1){setViewYear(viewYear-1);setViewMonth(12)}else setViewMonth(viewMonth-1)}}>‹</button>
+            <span className="mnav-label">{viewYear}/{String(viewMonth).padStart(2,'0')}</span>
+            <button className="mnav-btn" onClick={()=>{if(viewMonth===12){setViewYear(viewYear+1);setViewMonth(1)}else setViewMonth(viewMonth+1)}}>›</button>
+            </div>
+        </div>
+        <div style={{display:'flex',gap:0,marginBottom:18,borderBottom:'1.5px solid var(--rule)',overflowX:'auto'}}>
+            {staff.map(s=><button key={s.id} onClick={()=>setActive(s.id)} style={{padding:'8px 14px',background:'none',border:'none',fontSize:11,fontWeight:active===s.id?700:400,color:active===s.id?'var(--accent)':'var(--ink4)',cursor:'pointer',borderBottom:active===s.id?'2.5px solid var(--accent)':'2.5px solid transparent',marginBottom:'-1.5px',whiteSpace:'nowrap'}}>{s.name}</button>)}
+        </div>
+        {active&&(
+            <>
+            <div style={{display:'flex',gap:8,marginBottom:12,alignItems:'center',flexWrap:'wrap'}}>
+                <div style={{display:'flex',gap:5}}>
+                {SLOTS.map(sl=><span key={sl.id} className="sticker" style={{background:sl.bg,color:sl.color,border:`1px solid ${sl.border}`,fontSize:10}}>{sl.label} {sl.time}</span>)}
+                </div>
+                <div style={{marginLeft:'auto',display:'flex',gap:7,alignItems:'center'}}>
+                <span style={{fontSize:11,color:'var(--ink4)'}}>入力 <span style={{fontFamily:'DM Mono',color:totalDays>=desired?'var(--green)':'var(--blue)'}}>{totalDays}</span>/{desired}日</span>
+                <button className="btn btn-outline btn-sm" onClick={()=>{const np={...preferences};daysInMonth.forEach(d=>{const dk=fmt(d);np[dk]={...(np[dk]||{}),[active]:SLOTS.map(s=>s.id)}});setPreferences(np);}}>全◯</button>
+                <button className="btn btn-outline btn-sm" onClick={()=>{const np={...preferences};daysInMonth.forEach(d=>{const dk=fmt(d);if(np[dk])delete np[dk][active]});setPreferences(np);}}>クリア</button>
+                </div>
+            </div>
+            <div style={{overflowX:'auto'}}>
+                <div className="pref-grid" style={{minWidth:520}}>
+                {DAYS.map((d,i)=><div key={d} style={{background:'var(--paper3)',padding:'4px',textAlign:'center',fontSize:9,fontWeight:700,letterSpacing:'0.04em',color:i===0||i===6?'var(--accent)':'var(--ink3)'}}>{d}</div>)}
+                {Array.from({length:daysInMonth[0].getDay()}).map((_,i)=><div key={'e'+i} style={{background:'var(--paper2)'}}/>)}
+                {daysInMonth.map(date=>{const dk=fmt(date);const dow=date.getDay();return(
+                    <div key={dk} className={`pref-day${dow===0||dow===6?' we':''}`}>
+                    <div style={{fontFamily:'DM Mono',fontSize:10,textAlign:'right',marginBottom:2,color:dow===0||dow===6?'var(--accent)':'var(--ink4)'}}>{date.getDate()}</div>
+                    {SLOTS.map(sl=>{const on=isOn(dk,sl.id);return(
+                        <button key={sl.id} className="slot-btn" onClick={()=>tog(dk,sl.id)} style={{borderColor:on?sl.border:'var(--rule)',background:on?sl.bg:'transparent',color:on?sl.color:'var(--ink4)',fontWeight:on?700:400}}>{sl.label}</button>
+                    );})}
+                    </div>
+                );})}
+                </div>
+            </div>
+            </>
+        )}
+        </div>
+    );
+    }
+
+    /* ── SCHEDULE with adjust mode ── */
+    function ShiftSchedule({shifts,setShifts,staff,stores,daysInMonth,viewYear,viewMonth,setViewYear,setViewMonth,generateShifts,requirements,auth}){
+    const[view,setView]=useState('calendar');
+    const[adjustMode,setAdjustMode]=useState(false);
+    const[selected,setSelected]=useState(null); // {dk, index, shift}
+    const[pendingChanges,setPendingChanges]=useState({});
+
+    const myStoreId=auth.role==='manager'?auth.storeId:null;
+
+    const warnings=useMemo(()=>{
+        const ws=[];
+        daysInMonth.forEach(d=>{const dk=fmt(d);const isWE=d.getDay()===0||d.getDay()===6;const type=isWE?'weekend':'weekday';
+        const checkStores=myStoreId?stores.filter(s=>s.id===myStoreId):stores;
+        checkStores.forEach(store=>SLOTS.forEach(slot=>{const need=requirements[`${store.id}_${type}_${slot.id}`]||0;if(!need)return;const actual=(shifts[dk]||[]).filter(s=>s.store_id===store.id&&s.slot_id===slot.id).length;if(actual<need)ws.push({date:dk,store:store.name,slot:slot.label,need,actual});}));
+        });return ws;
+    },[daysInMonth,shifts,stores,requirements,myStoreId]);
+
+    const getShifts=dk=>{
+        const all=shifts[dk]||[];
+        if(myStoreId)return all.filter(s=>s.store_id===myStoreId);
+        return all;
+    };
+
+    // Apply pending changes
+    const applyChanges=()=>{
+        const ns={...shifts};
+        Object.entries(pendingChanges).forEach(([dk,dayChanges])=>{
+        if(!ns[dk])ns[dk]=[];
+        // apply changes: each change has {index, newStaffId, newSlotId} or {remove: true}
+        dayChanges.forEach(ch=>{
+            if(ch.remove){ns[dk]=ns[dk].filter((_,i)=>i!==ch.index);}
+            else{ns[dk]=ns[dk].map((s,i)=>i===ch.index?{...s,...(ch.newStaffId?{staff_id:ch.newStaffId}:{}),...(ch.newSlotId?{slot_id:ch.newSlotId}:{})}:s);}
+        });
+        });
+        setShifts(ns);
+        setPendingChanges({});
+        setAdjustMode(false);
+        setSelected(null);
+    };
+
+    const removeShift=(dk,idx)=>{
+        const ns={...shifts};
+        if(ns[dk]){ns[dk]=ns[dk].filter((_,i)=>i!==idx);setShifts(ns);}
+    };
+
+    const addShift=(dk,staffId,storeId,slotId)=>{
+        const ns={...shifts};
+        if(!ns[dk])ns[dk]=[];
+        ns[dk]=[...ns[dk],{staff_id:staffId,store_id:storeId,slot_id:slotId}];
+        setShifts(ns);
+    };
+
+    const[addForm,setAddForm]=useState({dk:'',staffId:'',storeId:'',slotId:'a'});
+    const[showAdd,setShowAdd]=useState(false);
+
+    return(
+        <div className="animate-in">
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:3,flexWrap:'wrap',gap:10}}>
+            <div>
+            <div className="pg-title" style={{display:'flex',alignItems:'center',gap:10}}>
+                シフト表
+                {adjustMode&&<span className="adjust-badge">調整モード</span>}
+            </div>
+            <div className="pg-sub">Shift Schedule</div>
+            </div>
+            <div style={{display:'flex',gap:7,alignItems:'center',flexWrap:'wrap'}}>
+            <div className="month-nav">
+                <button className="mnav-btn" onClick={()=>{if(viewMonth===1){setViewYear(viewYear-1);setViewMonth(12)}else setViewMonth(viewMonth-1)}}>‹</button>
+                <span className="mnav-label">{viewYear}/{String(viewMonth).padStart(2,'0')}</span>
+                <button className="mnav-btn" onClick={()=>{if(viewMonth===12){setViewYear(viewYear+1);setViewMonth(1)}else setViewMonth(viewMonth+1)}}>›</button>
+            </div>
+            {auth.role==='admin'&&<button className="btn btn-ink btn-sm" onClick={generateShifts}>再生成</button>}
+            <button className={`btn btn-sm ${adjustMode?'btn-accent':'btn-outline'}`}
+                onClick={()=>{setAdjustMode(!adjustMode);setSelected(null);}}>
+                {adjustMode?'調整中...':'シフト微調整'}
+            </button>
+            <div style={{display:'flex',border:'1.5px solid var(--rule)',borderRadius:2,overflow:'hidden'}}>
+                {['calendar','list'].map(v=><button key={v} onClick={()=>setView(v)} style={{padding:'4px 10px',border:'none',background:view===v?'var(--ink)':'transparent',color:view===v?'var(--paper)':'var(--ink4)',fontSize:10,fontWeight:view===v?700:400}}>{v==='calendar'?'カレンダー':'リスト'}</button>)}
+            </div>
+            </div>
+        </div>
+
+        {/* Add shift form */}
+        {adjustMode&&(
+            <div className="card" style={{background:'#fdf8f5',borderColor:'var(--accent)'}}>
+            <div style={{fontWeight:700,fontSize:12,marginBottom:10,color:'var(--accent)'}}>シフトを追加 / 削除</div>
+            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(120px,1fr))',gap:8,alignItems:'flex-end'}}>
+                <div>
+                <label className="lbl">日付</label>
+                <select className="sel inp" value={addForm.dk} onChange={e=>setAddForm({...addForm,dk:e.target.value})}>
+                    <option value="">日付を選択</option>
+                    {daysInMonth.map(d=>{const dk=fmt(d);return<option key={dk} value={dk}>{viewMonth}/{d.getDate()}（{DAYS[d.getDay()]}）</option>;})}
+                </select>
+                </div>
+                <div>
+                <label className="lbl">スタッフ</label>
+                <select className="sel inp" value={addForm.staffId} onChange={e=>setAddForm({...addForm,staffId:e.target.value})}>
+                    <option value="">選択</option>
+                    {staff.filter(s=>!myStoreId||s.stores.includes(myStoreId)).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                </div>
+                <div>
+                <label className="lbl">店舗</label>
+                <select className="sel inp" value={addForm.storeId} onChange={e=>setAddForm({...addForm,storeId:e.target.value})}>
+                    <option value="">選択</option>
+                    {(myStoreId?stores.filter(s=>s.id===myStoreId):stores).map(s=><option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+                </div>
+                <div>
+                <label className="lbl">シフト帯</label>
+                <select className="sel inp" value={addForm.slotId} onChange={e=>setAddForm({...addForm,slotId:e.target.value})}>
+                    {SLOTS.map(sl=><option key={sl.id} value={sl.id}>{sl.label} {sl.time}</option>)}
+                </select>
+                </div>
+                <button className="btn btn-ink btn-sm" onClick={()=>{if(addForm.dk&&addForm.staffId&&addForm.storeId)addShift(addForm.dk,addForm.staffId,addForm.storeId,addForm.slotId);}}>追加</button>
+            </div>
+            </div>
+        )}
+
+        {warnings.length>0&&(
+            <div className="warning-box">
+            <div style={{fontWeight:700,color:'var(--gold)',marginBottom:5}}>人員不足 {warnings.length}件</div>
+            <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                {warnings.slice(0,6).map((w,i)=><span key={i} style={{fontSize:10,border:'1px solid var(--gold)',padding:'2px 7px',borderRadius:1,color:'var(--gold)'}}>{w.date.slice(5)} {w.store} {w.slot} {w.actual}/{w.need}名</span>)}
+                {warnings.length>6&&<span style={{fontSize:10,color:'var(--ink4)'}}>他{warnings.length-6}件</span>}
+            </div>
+            </div>
+        )}
+
+        {view==='calendar'?(
+            <div style={{overflowX:'auto'}}>
+            <div className="cal-grid" style={{minWidth:660}}>
+                {DAYS.map((d,i)=><div key={d} className={`cal-head${i===0||i===6?' we':''}`}>{d}</div>)}
+                {Array.from({length:daysInMonth[0].getDay()}).map((_,i)=><div key={'e'+i} className="cal-day empty"/>)}
+                {daysInMonth.map(date=>{
+                const dk=fmt(date);const dow=date.getDay();
+                const ds=getShifts(dk);
+                const allDs=shifts[dk]||[];
+                return(
+                    <div key={dk} className={`cal-day${dow===0||dow===6?' we':''}`}>
+                    <div className="cal-date">{date.getDate()}</div>
+                    {ds.map((s,i)=>{
+                        const st=staff.find(x=>x.id===s.staff_id);
+                        const slot=SLOTS.find(x=>x.id===s.slot_id);
+                        const store=stores.find(x=>x.id===s.store_id);
+                        const realIdx=allDs.findIndex((x,xi)=>x===s||(x.staff_id===s.staff_id&&x.store_id===s.store_id&&x.slot_id===s.slot_id&&xi===allDs.indexOf(s)));
+                        return(
+                        <span key={i} className={`shift-chip${adjustMode?' editable':''}`}
+                            style={{borderLeftColor:slot?.color,background:slot?.bg,color:slot?.color,position:'relative'}}
+                            title={`${slot?.time} ${store?.name}`}>
+                            <span style={{opacity:.7,fontSize:8}}>{slot?.label} </span>
+                            <span style={{fontSize:9,fontWeight:700,color:'var(--ink)'}}>{st?.name}</span>
+                            {adjustMode&&(
+                            <button onClick={(e)=>{e.stopPropagation();removeShift(dk,i);}}
+                                style={{position:'absolute',top:-3,right:-3,width:14,height:14,borderRadius:'50%',background:'var(--accent)',color:'#fff',border:'none',fontSize:9,lineHeight:1,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}>×</button>
+                            )}
+                        </span>
+                        );
+                    })}
+                    </div>
+                );
+                })}
+            </div>
+            </div>
+        ):(
+            <div style={{border:'1.5px solid var(--rule)',borderRadius:3,overflow:'hidden'}}>
+            {daysInMonth.map(date=>{const dk=fmt(date);const ds=getShifts(dk);if(!ds.length)return null;const dow=date.getDay();return(
+                <div key={dk} className="day-row" style={{background:dow===0||dow===6?'#fdf8f5':'var(--paper)'}}>
+                <div className="day-row-date">{viewMonth}/{date.getDate()} <span style={{color:dow===0||dow===6?'var(--accent)':'var(--ink4)'}}>{DAYS[dow]}</span></div>
+                <div className="day-row-chips">
+                    {ds.map((s,i)=>{const st=staff.find(x=>x.id===s.staff_id);const store=stores.find(x=>x.id===s.store_id);const slot=SLOTS.find(x=>x.id===s.slot_id);return(
+                    <span key={i} style={{display:'inline-flex',alignItems:'center',gap:4,padding:'3px 8px',borderRadius:1,background:slot?.bg,border:`1px solid ${slot?.border}`,fontSize:11,position:'relative'}}>
+                        <span style={{fontWeight:700,color:slot?.color,fontSize:10}}>{slot?.label}</span>
+                        <span style={{color:store?.color,fontWeight:700,fontSize:10}}>{store?.name}</span>
+                        <span style={{color:'var(--ink)'}}>{st?.name}</span>
+                        {adjustMode&&<button onClick={()=>removeShift(dk,i)} style={{background:'none',border:'none',color:'var(--accent)',cursor:'pointer',fontSize:13,lineHeight:1,padding:'0 0 0 3px'}}>×</button>}
+                    </span>
+                    );})}
+                </div>
+                </div>
+            );})}
+            </div>
+        )}
+        </div>
+    );
+    }
+
+    /* ── BUDGET (admin only) ── */
+    function BudgetView({budget,setBudget,staff,shifts,viewYear,viewMonth,totalCost}){
+    const staffCost=useMemo(()=>{
+        const c={};staff.forEach(s=>c[s.id]={name:s.name,payType:s.payType,days:0,cost:0,hours:0});
+        Object.entries(shifts).forEach(([dk,ds])=>{const[y,m]=dk.split('-').map(Number);if(y===viewYear&&m===viewMonth)ds.forEach(s=>{const st=staff.find(x=>x.id===s.staff_id);const slot=SLOTS.find(x=>x.id===s.slot_id);if(st&&slot){c[s.staff_id].days++;c[s.staff_id].hours+=slot.hours;if(st.payType!=='monthly')c[s.staff_id].cost+=(st.rate||1225)*slot.hours;}});});
+        return Object.values(c).filter(x=>x.days>0).sort((a,b)=>b.cost-a.cost);
+    },[shifts,staff,viewYear,viewMonth]);
+    const remain=budget.monthly-totalCost;const pct=Math.min(100,Math.round(totalCost/budget.monthly*100));
+    return(
+        <div className="animate-in">
+        <div className="pg-title">予算管理</div>
+        <div className="pg-sub">Budget Management</div>
+        <div className="card">
+            <div className="card-title">月次予算</div>
+            <div style={{maxWidth:220}}>
+            <label className="lbl">予算額 (¥)</label>
+            <input type="number" className="inp" value={budget.monthly} onChange={e=>setBudget({...budget,monthly:parseInt(e.target.value)||0})}/>
+            </div>
+        </div>
+        <div className="stat-grid">
+            {[{l:'月次予算',v:`¥${budget.monthly.toLocaleString()}`},{l:'使用額',v:`¥${totalCost.toLocaleString()}`,color:pct>90?'var(--accent)':undefined},{l:'残額',v:`${remain<0?'-':''}¥${Math.abs(remain).toLocaleString()}`,color:remain<0?'var(--accent)':'var(--green)'},{l:'使用率',v:`${pct}%`,color:pct>90?'var(--accent)':pct>70?'var(--gold)':'var(--green)'}].map(s=>(
+            <div className="stat-cell" key={s.l}><div className="stat-label">{s.l}</div><div style={{fontFamily:'DM Mono',fontSize:22,fontWeight:500,color:s.color||'var(--ink)'}}>{s.v}</div></div>
+            ))}
+        </div>
+        <div className="budget-track" style={{height:10,marginBottom:14}}>
+            <div className="budget-fill" style={{width:`${pct}%`,background:pct>90?'var(--accent)':pct>70?'var(--gold)':'var(--green)'}}/>
+        </div>
+        {remain<0&&(
+            <div className="warning-box" style={{background:'#fdf0ea',borderColor:'var(--accent)',marginBottom:14}}>
+            <div style={{fontWeight:700,color:'var(--accent)',marginBottom:5}}>予算超過 ¥{Math.abs(remain).toLocaleString()}</div>
+            {staffCost.filter(s=>s.payType!=='monthly').slice(0,3).map(s=><div key={s.name} style={{fontSize:11,color:'var(--ink4)',marginTop:2}}>· {s.name}を1日減 → <span style={{color:'var(--green)',fontWeight:700}}>¥{(1225*8).toLocaleString()}削減（目安）</span></div>)}
+            </div>
+        )}
+        <div className="card">
+            <div className="card-title">スタッフ別コスト</div>
+            {staffCost.map(s=>{const bar=totalCost>0?Math.round(s.cost/totalCost*100):0;return(
+            <div key={s.name} style={{marginBottom:10}}>
+                <div style={{display:'flex',justifyContent:'space-between',fontSize:12,marginBottom:3}}>
+                <span style={{fontWeight:500}}>{s.name} <span style={{fontSize:10,color:'var(--ink4)'}}>{s.days}日 · {s.hours}h</span>{s.payType==='monthly'&&<span style={{fontSize:9,background:'var(--gold)',color:'#fff',padding:'1px 5px',borderRadius:1,marginLeft:4,fontWeight:700}}>月給</span>}</span>
+                <span style={{fontFamily:'DM Mono',fontSize:12}}>{s.payType==='monthly'?'(月給)':'¥'+s.cost.toLocaleString()}</span>
+                </div>
+                {s.payType!=='monthly'&&<div style={{background:'var(--paper3)',height:4,borderRadius:1,overflow:'hidden'}}><div style={{width:`${bar}%`,height:'100%',background:'var(--gold)',borderRadius:1}}/></div>}
+            </div>
+            );})}
+            {staffCost.length===0&&<div style={{fontSize:12,color:'var(--ink4)',textAlign:'center',padding:'10px 0'}}>シフト生成後に表示されます</div>}
+        </div>
+        </div>
+    );
+    }
+
+    /* ── APP ── */
+    function App(){
+    const[auth,setAuth]=useState(null);
+    const[tab,setTab]=useState('dashboard');
+    const[stores,setStores]=useLS('kll4_stores',INIT_STORES);
+    const[staff,setStaff]=useLS('kll4_staff',INIT_STAFF);
+    const[requirements,setRequirements]=useLS('kll4_req',{});
+    const[preferences,setPreferences]=useLS('kll4_pref',{});
+    const[shifts,setShifts]=useLS('kll4_shifts',{});
+    const[budget,setBudget]=useLS('kll4_budget',{monthly:500000});
+    const now=new Date();
+    const[viewYear,setViewYear]=useState(now.getFullYear());
+    const[viewMonth,setViewMonth]=useState(now.getMonth()+1);
+
+    const daysInMonth=useMemo(()=>{const days=[];const d=new Date(viewYear,viewMonth-1,1);while(d.getMonth()===viewMonth-1){days.push(new Date(d));d.setDate(d.getDate()+1);}return days;},[viewYear,viewMonth]);
+
+    const totalCost=useMemo(()=>{
+        let c=0;
+        Object.entries(shifts).forEach(([dk,ds])=>{const[y,m]=dk.split('-').map(Number);if(y===viewYear&&m===viewMonth)ds.forEach(s=>{const st=staff.find(x=>x.id===s.staff_id);const slot=SLOTS.find(x=>x.id===s.slot_id);if(st&&slot&&st.payType!=='monthly')c+=(st.rate||1225)*slot.hours;});});
+        return c;
+    },[shifts,staff,viewYear,viewMonth]);
+
+    const generateShifts=useCallback(()=>{
+        const ns={};const sd={};staff.forEach(s=>sd[s.id]=0);
+        daysInMonth.forEach(date=>{
+        const dk=fmt(date);const isWE=date.getDay()===0||date.getDay()===6;const type=isWE?'weekend':'weekday';ns[dk]=[];
+        stores.forEach(store=>SLOTS.forEach(slot=>{
+            const need=requirements[`${store.id}_${type}_${slot.id}`]||0;if(!need)return;
+            const cands=staff.filter(s=>{const pref=preferences[dk]?.[s.id]||[];return s.stores.includes(store.id)&&pref.includes(slot.id)&&!ns[dk].some(sh=>sh.staff_id===s.id)&&sd[s.id]<s.desired;}).sort((a,b)=>(sd[a.id]/a.desired)-(sd[b.id]/b.desired));
+            cands.slice(0,need).forEach(s=>{ns[dk].push({staff_id:s.id,store_id:store.id,slot_id:slot.id});sd[s.id]++;});
+        }));
+        });
+        setShifts(ns);setTab('schedule');
+    },[daysInMonth,stores,staff,requirements,preferences]);
+
+    if(!auth)return <LoginModal staff={staff} stores={stores} onLogin={a=>{setAuth(a);setTab('dashboard');}}/>;
+
+    const ADMIN_TABS=[{id:'dashboard',label:'概要'},{id:'stores',label:'店舗設定'},{id:'staff',label:'スタッフ'},{id:'preferences',label:'希望入力'},{id:'schedule',label:'シフト表'},{id:'budget',label:'予算'}];
+    const MGR_TABS=[{id:'dashboard',label:'概要'},{id:'schedule',label:'シフト確認 · 調整'}];
+    const TABS=auth.role==='admin'?ADMIN_TABS:MGR_TABS;
+
+    const props={stores,setStores,staff,setStaff,requirements,setRequirements,preferences,setPreferences,shifts,setShifts,budget,setBudget,daysInMonth,viewYear,viewMonth,setViewYear,setViewMonth,totalCost,generateShifts,setTab,auth};
+
+    const mgrStore=auth.role==='manager'?stores.find(s=>s.id===auth.storeId):null;
+
+    return(
+        <>
+        <header className="hdr">
+            <div className="wrap">
+            <div className="hdr-inner">
+                <div><div className="hdr-logo-main">KLL シフト管理</div><div className="hdr-logo-sub">Guesthouse Shift Board</div></div>
+                <div className="hdr-right">
+                {auth.role==='manager'&&mgrStore&&(
+                    <div className="hdr-badge" style={{borderColor:mgrStore.color,color:mgrStore.color}}>{mgrStore.name} MGR</div>
+                )}
+                {auth.role==='admin'&&(
+                    <div className="hdr-badge" style={{fontFamily:'DM Mono',fontSize:11}}>
+                    <span style={{color:totalCost>budget.monthly?'var(--accent)':'var(--green)'}}>¥{totalCost.toLocaleString()}</span> / ¥{budget.monthly.toLocaleString()}
+                    </div>
+                )}
+                <button className="btn btn-outline btn-sm" onClick={()=>{setAuth(null);setTab('dashboard');}}>ログアウト</button>
+                </div>
+            </div>
+            </div>
+        </header>
+        <nav className="tabs">
+            <div className="wrap">
+            {TABS.map(t=><button key={t.id} className={`tab-btn${tab===t.id?' active':''}`} onClick={()=>setTab(t.id)}>{t.label}</button>)}
+            </div>
+        </nav>
+        <main><div className="wrap main">
+            {tab==='dashboard'&&<Dashboard {...props}/>}
+            {tab==='stores'&&auth.role==='admin'&&<StoreSettings {...props}/>}
+            {tab==='staff'&&auth.role==='admin'&&<StaffManagement {...props}/>}
+            {tab==='preferences'&&auth.role==='admin'&&<PreferenceInput {...props}/>}
+            {tab==='schedule'&&<ShiftSchedule {...props}/>}
+            {tab==='budget'&&auth.role==='admin'&&<BudgetView {...props}/>}
+        </div></main>
+        </>
+    );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+    </script>
+    </body>
+    </html>
